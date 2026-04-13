@@ -10,6 +10,7 @@ import '../../../../app/extensions/utils_extension.dart';
 import '../../../shared/presentation/widgets/inc_dec_button.dart';
 import '../../../shared/presentation/widgets/product_favourite_button.dart';
 import '../../../shared/presentation/widgets/product_rating.dart';
+import '../../../wishlist/presentation/providers/wishlist_provider.dart';
 import '../providers/product_details_provider.dart';
 import '../widgets/color_picker.dart';
 import '../widgets/price_and_add_to_cart_section.dart';
@@ -28,9 +29,8 @@ class ProductDetailsScreen extends StatefulWidget {
 }
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
-  final ProductDetailsProvider _productDetailsProvider =
-  ProductDetailsProvider();
-  final AddToCartProvider _addToCartProvider = AddToCartProvider();
+  late ProductDetailsProvider _productDetailsProvider;
+  late AddToCartProvider _addToCartProvider;
 
   int _quantity = 1;
   String? _selectedColor;
@@ -39,9 +39,29 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   @override
   void initState() {
     super.initState();
+    _productDetailsProvider = ProductDetailsProvider();
+    _addToCartProvider = AddToCartProvider();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _productDetailsProvider.getProductDetails(widget.productId);
+      _loadProductDetails();
+      _loadWishlist();
     });
+  }
+
+  Future<void> _loadProductDetails() async {
+    await _productDetailsProvider.getProductDetails(widget.productId);
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _loadWishlist() async {
+    try {
+      final wishlistProvider = context.read<WishlistProvider>();
+      await wishlistProvider.getWishlist();
+    } catch (e) {
+      debugPrint('WishlistProvider not available: $e');
+    }
   }
 
   @override
@@ -52,53 +72,80 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
         ChangeNotifierProvider.value(value: _addToCartProvider),
       ],
       child: Scaffold(
-        appBar: AppBar(title: Text('Product details')),
+        appBar: AppBar(title: const Text('Product details')),
         body: Consumer<ProductDetailsProvider>(
-          builder: (context, _, _) {
-            if (_productDetailsProvider.getProductDetailsInProgress) {
+          builder: (context, provider, child) {
+            if (provider.getProductDetailsInProgress) {
               return const CenterCircularProgress();
-            } else if (_productDetailsProvider.errorMessage != null) {
-              return Center(child: Text(_productDetailsProvider.errorMessage!));
             }
 
+            if (provider.errorMessage != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Failed to load product details',
+                      style: context.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      provider.errorMessage!,
+                      style: const TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadProductDetails,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
+            final product = provider.productDetailsModel;
+            if (product == null) {
+              return const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Loading product data...'),
+                  ],
+                ),
+              );
+            }
             return Column(
               children: [
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        ProductImageCarousel(
-                          imageUrls: _productDetailsProvider
-                              .productDetailsModel!
-                              .photos,
-                        ),
+                        ProductImageCarousel(imageUrls: product.photos),
                         Padding(
                           padding: const EdgeInsets.all(16),
                           child: Column(
-                            crossAxisAlignment: .start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _buildTitleSection(),
-                              if (_productDetailsProvider
-                                  .productDetailsModel!
-                                  .colors
-                                  .isNotEmpty)
+                              _buildTitleSection(product),
+                              if (product.colors.isNotEmpty)
                                 ColorPicker(
-                                  colors: _productDetailsProvider
-                                      .productDetailsModel!
-                                      .colors,
+                                  colors: product.colors,
                                   onChange: (String color) {
                                     _selectedColor = color;
                                   },
                                 ),
                               const SizedBox(height: 16),
-                              if (_productDetailsProvider
-                                  .productDetailsModel!
-                                  .sizes
-                                  .isNotEmpty)
+                              if (product.sizes.isNotEmpty)
                                 SizePicker(
-                                  sizes: _productDetailsProvider
-                                      .productDetailsModel!
-                                      .sizes,
+                                  sizes: product.sizes,
                                   onChange: (String size) {
                                     _selectedSize = size;
                                   },
@@ -110,10 +157,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                _productDetailsProvider
-                                    .productDetailsModel!
-                                    .description,
-                                style: TextStyle(color: Colors.grey),
+                                product.description,
+                                style: const TextStyle(color: Colors.grey),
                               ),
                             ],
                           ),
@@ -123,22 +168,25 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                 ),
                 PriceAndAddToCartSection(
-                  price: _productDetailsProvider
-                      .productDetailsModel!
-                      .currentPrice
-                      .toDouble(),
+                  price: product.currentPrice.toDouble(),
                   onTapAddToCart: () async {
                     AddToCartModel params = AddToCartModel(
-                      id: _productDetailsProvider.productDetailsModel!.id,
+                      id: product.id,
                       quantity: _quantity,
                       color: _selectedColor,
                       size: _selectedSize,
                     );
-                    final isSuccess = await _addToCartProvider.addToCart(params);
+                    final isSuccess = await _addToCartProvider.addToCart(
+                      params,
+                    );
                     if (isSuccess) {
                       showSnackBarMessage(context, 'Added to cart');
                     } else {
-                      showSnackBarMessage(context, _addToCartProvider.errorMessage!);
+                      showSnackBarMessage(
+                        context,
+                        _addToCartProvider.errorMessage ??
+                            'Failed to add to cart',
+                      );
                     }
                   },
                 ),
@@ -150,24 +198,24 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     );
   }
 
-  Widget _buildTitleSection() {
+  Widget _buildTitleSection(product) {
     return Row(
       spacing: 8,
-      crossAxisAlignment: .start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Column(
-            crossAxisAlignment: .start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Nike 2026 - New Year Special Edition',
+                product.title,
                 style: context.textTheme.titleMedium?.copyWith(
                   color: Colors.black87,
                 ),
               ),
               Row(
                 children: [
-                  ProductRating(rating: '4.7'),
+                  const ProductRating(rating: '4.7'),
                   TextButton(
                     onPressed: () {},
                     child: Text(
@@ -175,20 +223,28 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       style: TextStyle(color: AppColors.themeColor),
                     ),
                   ),
-                  ProductFavouriteButton(),
+                  ProductFavouriteButton(productId: product.id),
                 ],
               ),
             ],
           ),
         ),
         IncDecButton(
-          maxCount:
-          _productDetailsProvider.productDetailsModel!.availableQuantity,
+          maxCount: product.availableQuantity,
           onChange: (int count) {
-            _quantity = count;
+            setState(() {
+              _quantity = count;
+            });
           },
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _productDetailsProvider.dispose();
+    _addToCartProvider.dispose();
+    super.dispose();
   }
 }

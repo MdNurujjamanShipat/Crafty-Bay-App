@@ -10,6 +10,8 @@ class Urls {
   static const String addToCartUrl = '$_baseUrl/cart';
   static const String getCartListUrl = '$_baseUrl/cart';
 
+  static const String wishlistUrl = '$_baseUrl/wishlist';
+
   static String categoryListUrl(int pageNo, int pageSize) =>
       '$_baseUrl/categories?count=$pageSize&page=$pageNo';
 

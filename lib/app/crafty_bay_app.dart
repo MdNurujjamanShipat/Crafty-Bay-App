@@ -7,16 +7,13 @@ import 'package:provider/provider.dart';
 
 import '../features/category/presentation/providers/category_list_provider.dart';
 import '../features/shared/presentation/providers/main_nav_provider.dart';
+import '../features/wishlist/presentation/providers/wishlist_provider.dart';
 import '../l10n/app_localizations.dart';
 import 'app_routes.dart';
 
-// TODO: Add Theme Mode Change Provider
-
 class CraftyBayApp extends StatelessWidget {
   const CraftyBayApp({super.key});
-
   static GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -25,26 +22,27 @@ class CraftyBayApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => MainNavProvider()),
         ChangeNotifierProvider(create: (context) => HomeSliderProvider()),
         ChangeNotifierProvider(create: (context) => CategoryListProvider()),
+        ChangeNotifierProvider(create: (context) => WishlistProvider()),
       ],
       child: Consumer<LanguageProvider>(
-          builder: (context, languageProvider, child) {
-            return MaterialApp(
-              navigatorKey: navigatorKey,
-              localizationsDelegates: [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              initialRoute: '/',
-              onGenerateRoute: AppRoutes.onGenerateRoute,
-              theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
-              locale: languageProvider.currentLocale,
-              supportedLocales: languageProvider.supportedLocales,
-              themeMode: .light,
-            );
-          }
+        builder: (context, languageProvider, child) {
+          return MaterialApp(
+            navigatorKey: navigatorKey,
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            initialRoute: '/',
+            onGenerateRoute: AppRoutes.onGenerateRoute,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            locale: languageProvider.currentLocale,
+            supportedLocales: languageProvider.supportedLocales,
+            themeMode: .light,
+          );
+        },
       ),
     );
   }
