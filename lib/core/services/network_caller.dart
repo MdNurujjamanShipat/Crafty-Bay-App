@@ -41,8 +41,7 @@ class NetworkCaller {
         return NetworkResponse(
           isSuccess: false,
           responseCode: response.statusCode,
-          errorMessage:
-          decodedData['msg'], // TODO: Decouple this data variable
+          errorMessage: decodedData['msg'],
         );
       }
     } catch (e) {
@@ -55,10 +54,10 @@ class NetworkCaller {
   }
 
   Future<NetworkResponse> postRequest(
-      String url, {
-        Map<String, dynamic>? body,
-        bool isFromLogin = false,
-      }) async {
+    String url, {
+    Map<String, dynamic>? body,
+    bool isFromLogin = false,
+  }) async {
     try {
       Uri uri = Uri.parse(url);
 
@@ -103,18 +102,61 @@ class NetworkCaller {
     }
   }
 
+  Future<NetworkResponse> deleteRequest(String url) async {
+    try {
+      Uri uri = Uri.parse(url);
+
+      _logRequest(url);
+      Response response = await delete(uri, headers: headers());
+      _logResponse(url, response);
+
+      final decodedData = response.body.isNotEmpty
+          ? jsonDecode(response.body)
+          : null;
+
+      if (response.statusCode == 200) {
+        return NetworkResponse(
+          isSuccess: true,
+          responseCode: response.statusCode,
+          body: decodedData,
+        );
+      } else if (response.statusCode == 401) {
+        onUnauthorize();
+        return NetworkResponse(
+          isSuccess: false,
+          responseCode: response.statusCode,
+          errorMessage: 'Un-authorize',
+        );
+      } else {
+        return NetworkResponse(
+          isSuccess: false,
+          responseCode: response.statusCode,
+          errorMessage:
+              decodedData?['msg'] ??
+              'Request failed with status ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      return NetworkResponse(
+        isSuccess: false,
+        responseCode: -1,
+        errorMessage: e.toString(),
+      );
+    }
+  }
+
   void _logRequest(String url, {Map<String, dynamic>? body}) {
     _logger.i(
       'URL: $url\n'
-          'Body: $body',
+      'Body: $body',
     );
   }
 
   void _logResponse(String url, Response response) {
     _logger.i(
       'URL: $url\n'
-          'Status Code: ${response.statusCode}\n'
-          'Body: ${response.body}',
+      'Status Code: ${response.statusCode}\n'
+      'Body: ${response.body}',
     );
   }
 }

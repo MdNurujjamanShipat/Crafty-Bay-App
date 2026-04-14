@@ -8,9 +8,7 @@ import 'crafty_bay_app.dart';
 NetworkCaller getNetworkCaller() {
   return NetworkCaller(
     headers: () {
-      Map<String, String> headers = {
-        'content-type': 'application/json',
-      };
+      Map<String, String> headers = {'content-type': 'application/json'};
       if (AuthController.token != null) {
         headers['token'] = '${AuthController.token}';
       }
@@ -22,8 +20,6 @@ NetworkCaller getNetworkCaller() {
     },
   );
 }
-
-
 
 void _moveToSignInScreen() {
   Navigator.pushNamed(
