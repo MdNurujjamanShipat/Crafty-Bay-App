@@ -41,7 +41,7 @@ class CraftyBayApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             locale: languageProvider.currentLocale,
             supportedLocales: languageProvider.supportedLocales,
-            themeMode: .light,
+            themeMode: ThemeMode.light,
           );
         },
       ),
