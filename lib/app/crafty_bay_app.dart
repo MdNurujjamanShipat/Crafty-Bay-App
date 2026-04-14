@@ -27,6 +27,7 @@ class CraftyBayApp extends StatelessWidget {
       child: Consumer<LanguageProvider>(
         builder: (context, languageProvider, child) {
           return MaterialApp(
+            debugShowCheckedModeBanner: false,
             navigatorKey: navigatorKey,
             localizationsDelegates: [
               AppLocalizations.delegate,
