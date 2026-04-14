@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../app/app_colors.dart';
 import '../../../../app/extensions/utils_extension.dart';
+import '../../../review/presentation/screens/review_list_screen.dart';
 import '../../../shared/presentation/widgets/inc_dec_button.dart';
 import '../../../shared/presentation/widgets/product_favourite_button.dart';
 import '../../../shared/presentation/widgets/product_rating.dart';
@@ -217,7 +218,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 children: [
                   const ProductRating(rating: '4.7'),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        ReviewListScreen.name,
+                        arguments: {
+                          'productId': product.id,
+                          'productTitle': product.title,
+                          'productImage': product.photos.isNotEmpty
+                              ? product.photos.first
+                              : null,
+                        },
+                      );
+                    },
                     child: Text(
                       'Reviews',
                       style: TextStyle(color: AppColors.themeColor),

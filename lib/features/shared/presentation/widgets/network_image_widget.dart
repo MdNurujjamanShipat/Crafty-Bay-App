@@ -9,11 +9,13 @@ class AppNetworkImage extends StatelessWidget {
     required this.urls,
     this.height,
     this.width,
+    this.fit,
   });
 
   final List<String> urls;
   final double? height;
   final double? width;
+  final BoxFit? fit;
 
   @override
   Widget build(BuildContext context) {
@@ -24,17 +26,14 @@ class AppNetworkImage extends StatelessWidget {
     if (urls.isNotEmpty) {
       return CachedNetworkImage(
         imageUrl: urls.first,
-        fit: .scaleDown,
+        fit: fit ?? BoxFit.scaleDown,
         progressIndicatorBuilder: (context, url, downloadProgress) => NoImage(),
         errorWidget: (context, url, error) => NoImage(),
         height: height,
         width: width,
       );
     } else {
-      return NoImage(
-        height: height,
-        width: width,
-      );
+      return NoImage(height: height, width: width);
     }
   }
 }

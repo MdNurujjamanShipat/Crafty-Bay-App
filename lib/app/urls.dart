@@ -12,6 +12,9 @@ class Urls {
 
   static const String wishlistUrl = '$_baseUrl/wishlist';
 
+  static const String reviewsUrl = '$_baseUrl/reviews';
+  static const String createReviewUrl = '$_baseUrl/review';
+
   static String categoryListUrl(int pageNo, int pageSize) =>
       '$_baseUrl/categories?count=$pageSize&page=$pageNo';
 
