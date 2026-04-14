@@ -5,36 +5,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
-// Project structure
-// Theming set up
-// Firebase set up
-// Crashlytics + Analytics set up
-// Localization
-// Routing
-
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Pass all uncaught "fatal" errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
   PlatformDispatcher.instance.onError = (error, stack) {
     FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
     return true;
   };
 
   runApp(const CraftyBayApp());
-  // runApp(
-  //   const MaterialApp(
-  //     home: Scaffold(
-  //       backgroundColor: Colors.red,
-  //       body: Center(child: Text("Graphics testing...", style: TextStyle(color: Colors.white))),
-  //     ),
-  //   ),
-  // );
 }
