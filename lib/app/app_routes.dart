@@ -32,14 +32,27 @@ class AppRoutes {
         widget = const MainNavHolderScreen();
         break;
       case ProductListScreen.name:
-        final category = settings.arguments as CategoryModel;
-        widget = ProductListScreen(category: category);
+        final args = settings.arguments;
+        if (args is CategoryModel) {
+          widget = ProductListScreen(category: args);
+        } else if (args is Map<String, String>) {
+          widget = ProductListScreen(
+            categoryId: args['categoryId'],
+            categoryName: args['categoryName'],
+          );
+        } else if (args is Map<String, dynamic>) {
+          widget = ProductListScreen(
+            categoryId: args['categoryId'],
+            categoryName: args['categoryName'],
+          );
+        } else {
+          widget = const ProductListScreen();
+        }
         break;
       case ProductDetailsScreen.name:
         final productId = settings.arguments as String;
         widget = ProductDetailsScreen(productId: productId);
         break;
-
       case ReviewListScreen.name:
         final args = settings.arguments as Map<String, dynamic>;
         widget = ReviewListScreen(

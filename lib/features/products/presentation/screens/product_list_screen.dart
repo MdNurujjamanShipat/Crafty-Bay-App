@@ -7,9 +7,16 @@ import '../../../category/data/models/category_model.dart';
 import '../../../shared/presentation/widgets/product_card.dart';
 
 class ProductListScreen extends StatefulWidget {
-  const ProductListScreen({super.key, required this.category});
+  const ProductListScreen({
+    super.key,
+    this.category,
+    this.categoryId,
+    this.categoryName,
+  });
 
-  final CategoryModel category;
+  final CategoryModel? category;
+  final String? categoryId;
+  final String? categoryName;
 
   static const String name = '/product-list';
 
@@ -20,12 +27,25 @@ class ProductListScreen extends StatefulWidget {
 class _ProductListScreenState extends State<ProductListScreen> {
   final ScrollController _scrollController = ScrollController();
   final ProductListProvider _productListProvider = ProductListProvider();
+  late String _categoryId;
+  late String _categoryTitle;
 
   @override
   void initState() {
     super.initState();
+    if (widget.category != null) {
+      _categoryId = widget.category!.id;
+      _categoryTitle = widget.category!.title;
+    } else if (widget.categoryId != null) {
+      _categoryId = widget.categoryId!;
+      _categoryTitle = widget.categoryName ?? 'Products';
+    } else {
+      _categoryId = '';
+      _categoryTitle = 'Products';
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _productListProvider.getProducts(widget.category.id);
+      _productListProvider.getProducts(_categoryId);
       _scrollController.addListener(_loadMoreProducts);
     });
   }
@@ -36,7 +56,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     }
 
     if (_scrollController.position.extentBefore < 300) {
-      _productListProvider.getProducts(widget.category.id);
+      _productListProvider.getProducts(_categoryId);
     }
   }
 
@@ -45,11 +65,31 @@ class _ProductListScreenState extends State<ProductListScreen> {
     return ChangeNotifierProvider.value(
       value: _productListProvider,
       child: Scaffold(
-        appBar: AppBar(title: Text(widget.category.title)),
+        appBar: AppBar(title: Text(_categoryTitle)),
         body: Consumer<ProductListProvider>(
           builder: (context, _, _) {
             if (_productListProvider.getInitialProductListInProgress) {
               return const CenterCircularProgress();
+            }
+
+            if (_productListProvider.products.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 64,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No products in $_categoryTitle',
+                      style: const TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              );
             }
 
             return Column(
@@ -58,10 +98,11 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   child: GridView.builder(
                     controller: _scrollController,
                     itemCount: _productListProvider.products.length,
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      mainAxisSpacing: 4,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          mainAxisSpacing: 4,
+                        ),
                     itemBuilder: (context, index) {
                       return FittedBox(
                         child: ProductCard(
