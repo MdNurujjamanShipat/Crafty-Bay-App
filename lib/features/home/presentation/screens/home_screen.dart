@@ -19,6 +19,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const String popularCategoryId = '67c35af85e8a445235de197b';
+
+  static const String specialCategoryId = '67c35b395e8a445235de197e';
+
+  static const String newCategoryId = '67c7bec4623a876bc4766fea';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,12 +44,50 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTapSeeAll: context.read<MainNavProvider>().moveToCategory,
               ),
               HomeCategoryList(),
-              SectionHeader(name: 'Popular', onTapSeeAll: () {}),
-              HorizontalProductListView(),
-              SectionHeader(name: 'Special', onTapSeeAll: () {}),
-              HorizontalProductListView(),
-              SectionHeader(name: 'New', onTapSeeAll: () {}),
-              HorizontalProductListView(),
+              SectionHeader(
+                name: 'Popular',
+                onTapSeeAll: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/product-list',
+                    arguments: {
+                      'categoryId': popularCategoryId,
+                      'categoryName': 'Popular',
+                    },
+                  );
+                },
+              ),
+              HorizontalProductListView(categoryId: popularCategoryId),
+
+              SectionHeader(
+                name: 'Special',
+                onTapSeeAll: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/product-list',
+                    arguments: {
+                      'categoryId': specialCategoryId,
+                      'categoryName': 'Special',
+                    },
+                  );
+                },
+              ),
+              HorizontalProductListView(categoryId: specialCategoryId),
+
+              SectionHeader(
+                name: 'New',
+                onTapSeeAll: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/product-list',
+                    arguments: {
+                      'categoryId': newCategoryId,
+                      'categoryName': 'New Arrival',
+                    },
+                  );
+                },
+              ),
+              HorizontalProductListView(categoryId: newCategoryId),
             ],
           ),
         ),
